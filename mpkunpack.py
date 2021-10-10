@@ -9,8 +9,8 @@ import io
 print("                       M P K  U N P A C K")
 print("\"Thailand will get to play Steins;Gate.\" --Phachara Chirapakachote")
 if len(sys.argv) != 2:
-    print("Usage: mpkviewer.py <mpk file>")
-    print("Example: mpkviewer.py c0data.mpk")
+    print("Usage: mpkunpack.py <mpk file>")
+    print("Example: mpkunpack.py c0data.mpk")
     print("Output: Folder with extracted files + TOC file")
     sys.exit(0)
 
