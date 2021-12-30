@@ -5,18 +5,31 @@ import sys
 import os
 import os.path
 import io
+import argparse
+import tkinter
+from tkinter import filedialog
 
-print("                       M P K  U N P A C K")
-print("\"Thailand will get to play Steins;Gate.\" --Phachara Chirapakachote")
-if len(sys.argv) != 2:
-    print("Usage: mpkunpack.py <mpk file>")
-    print("Example: mpkunpack.py c0data.mpk")
-    print("Output: Folder with extracted files + TOC file")
-    sys.exit(0)
+parser = argparse.ArgumentParser()
+parser.add_argument("-G", type=bool, default=True, help="Enable GUI mode")
+parser.add_argument("--mpkfile", "--mpk", type=str, help="MPK file to be unpack")
+args = parser.parse_args()
 
-mpkfile = sys.argv[1]
-csv_file_name = os.path.basename(mpkfile)[0:-4] + "_toc.csv"
-output_path = os.path.basename(mpkfile)[0:-4]
+mpkfile = args.mpkfile
+tocfile = f"{mpkfile[0:-4]}_toc.csv" if mpkfile else None
+output_path = mpkfile[0:-4] if mpkfile else None
+enable_gui = args.G
+
+if enable_gui:
+    root = tkinter.Tk()
+    root.withdraw()
+    mpkfile = filedialog.askopenfilename(title="Select MPK file", filetypes=[("MPK file", "*.mpk")])
+    tocfile = f"{mpkfile[0:-4]}_toc.csv"
+    output_path = mpkfile[0:-4]
+    root.destroy()
+
+if mpkfile and tocfile:
+    print("                       M P K  U N P A C K")
+    print("\"Thailand will get to play Steins;Gate.\" --Phachara Chirapakachote")
 
 if not os.path.exists(output_path):
     os.makedirs(output_path)
@@ -25,11 +38,10 @@ with io.open(mpkfile, "rb") as f:
     # ตรวจดูว่าใช่ไฟล์ MPK จริงไหม
     f.seek(os.SEEK_SET)
     if f.read(3) != b'MPK':
-        print("Invalid file.")
-        sys.exit()
+        raise Exception("Not a MPK file")
 
     # สร้างไฟล์ csv
-    with io.open(csv_file_name, "w", newline="") as csv_file:
+    with io.open(tocfile, "w", newline="") as csv_file:
         item = csv.writer(csv_file)
         item.writerow(["# id", "filename_on_disk", "filename_in_archive"])
 
@@ -37,7 +49,7 @@ with io.open(mpkfile, "rb") as f:
     f.seek(8)
     count = int.from_bytes(f.read(8), byteorder="little", signed=False)
     print("======================")
-    print("File count: " + str(count))
+    print(f"File count: {str(count)}")
     print("======================")
 
     i = 0
@@ -66,10 +78,11 @@ with io.open(mpkfile, "rb") as f:
             file_in_archive.write(buf)
 
         # เขียนไฟล์ csv
-        with io.open(csv_file_name, "a", newline="") as csv_file:
+        with io.open(tocfile, "a", newline="") as csv_file:
             item = csv.writer(csv_file)
             item.writerow([id, output_path + "/" + filename, filename])
         i += 1
 
     print("Files and TOC extracted successfully.")
-    
+    os.system(f"start {output_path}")
+    input("Press Enter to exit...")

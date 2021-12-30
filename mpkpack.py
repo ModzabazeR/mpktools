@@ -1,32 +1,45 @@
 # This code is modified from CoZ's mpkpack.py at https://github.com/CommitteeOfZero/sghd-patch/blob/master/mpkpack.py
 
 import csv
-import sys
 import os
 import struct
 import io
+import argparse
+import tkinter
+from tkinter import filedialog
 
 def round_to_2kb(par):
     return int(((par / 2048) + (0 if (par % 2048) == 0 else 1)) * 2048)
 
-print("                M P K P A C K")
-print("\"Couldn't have done it better myself.\" --Phil Katz")
-if len(sys.argv) != 3:
-    print ("Usage: mpkpack.py <tocfile> <output path>")
-    print ("Example: mpkpack.py c0data_toc.csv c0data.mpk")
-    sys.exit(0)
+parser = argparse.ArgumentParser()
+parser.add_argument("-G", type=bool, default=True, help="Enable GUI mode")
+parser.add_argument("--tocfile", "--toc", type=str, help="TOC file to be referenced")
+args = parser.parse_args()
 
-tocfilename = sys.argv[1]
-outputpath = sys.argv[2]
+tocfile = args.tocfile
+output_path = f"{tocfile[0:-4]}.mpk" if tocfile else None
+enable_gui = args.G
 
-print("Please don't touch any inputs while I work, or feed me invalid ones")
-print(" or I *will* break horribly")
+if enable_gui:
+    root = tkinter.Tk()
+    root.withdraw()
+    tocfile = filedialog.askopenfilename(title="Select TOC file", filetypes=[("TOC file", "*.csv")])
+    output_path = f"{tocfile[0:-4]}.mpk"
+    root.destroy()
+
+if tocfile:
+    print("                M P K P A C K")
+    print("\"Couldn't have done it better myself.\" --Phil Katz")
+    print()
+    print("Please don't touch any inputs while I work, or feed me invalid ones")
+    print(" or I *will* break horribly")
+    print()
 
 entries = []
 
 # อ่านข้อมูลในไฟล์ csv
 print("Reading TOC...")
-with io.open(tocfilename, 'r') as f:
+with io.open(tocfile, 'r') as f:
     reader = csv.reader(f)
     for row in reader:
         if row[0].startswith('#'): # ถ้าแถวไหนเริ่มด้วย # ให้ข้ามไปเลย
@@ -38,9 +51,10 @@ with io.open(tocfilename, 'r') as f:
         }
         entries.append(entry) # output จะออกมาเป็น list ของ dictionary
     print("Total entries found: {0}".format(len(entries)))
+    print()
 
 # เขียนข้อมูลในไฟล์ mpk
-with io.open(outputpath, 'wb') as f:
+with io.open(output_path, 'wb') as f:
     print("Writing header...")
     magic = b'MPK\0'
     ver = b'\x00\x00\x02\x00'
@@ -49,6 +63,7 @@ with io.open(outputpath, 'wb') as f:
     count = struct.pack("<Q", len(entries)) # little endian interger 8 bytes (C: unsigned long long)
     f.write(count)
     print("Count in byte: {0}".format(count))
+    print()
     
     pos = round_to_2kb(0x40 + len(entries) * 0x100)
     print("Writing files...")
@@ -67,6 +82,7 @@ with io.open(outputpath, 'wb') as f:
         pos = round_to_2kb(pos + entry["filesize"])
     
     i = 0
+    print()
     print("Writing TOC...")
     for entry in entries:
         f.seek(0x40 + (i * 0x100), os.SEEK_SET)
@@ -85,3 +101,8 @@ with io.open(outputpath, 'wb') as f:
         filename = entry["filename_in_archive"].encode('ascii')[:(0xE0 - 1)]
         f.write(filename)
         i += 1
+
+print()
+print("Done!")
+print("Output file: {0}".format(output_path))
+input("Press Enter to exit...")
