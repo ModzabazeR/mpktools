@@ -84,5 +84,4 @@ with io.open(mpkfile, "rb") as f:
         i += 1
 
     print("Files and TOC extracted successfully.")
-    os.system(f"start {output_path}")
-    input("Press Enter to exit...")
+    os.system(f"dolphin '{output_path}'")
