@@ -6,6 +6,16 @@ import os.path
 import io
 import argparse
 from PyQt5.QtWidgets import QApplication, QFileDialog
+import math
+
+def convert_size(size_bytes):
+   if size_bytes == 0:
+       return "0B"
+   size_name = ("B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB")
+   i = int(math.floor(math.log(size_bytes, 1024)))
+   p = math.pow(1024, i)
+   s = round(size_bytes / p, 2)
+   return f"{s} {size_name[i]}"
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-G", type=bool, default=True, help="Enable GUI mode")
@@ -62,10 +72,10 @@ with io.open(mpkfile, "rb") as f:
         filename = f.read(48).decode('ascii').rstrip('\x00') 
 
         # แสดงข้อมูลที่ได้
-        print("Id: " + str(id))
-        print("Offset (int): " + str(offset))
-        print("File Size: " + str(filesize_uncompressed) + " bytes")
-        print("File Name: " + filename)
+        print(f"Id: {id}")
+        print(f"Offset (int): {offset}")
+        print(f"File Size: {convert_size(filesize_uncompressed)} ({filesize_uncompressed:,} bytes)")
+        print(f"File Name: {filename}")
         print()
 
         # สร้างและเขียนข้อมูลแต่ละไฟล์
