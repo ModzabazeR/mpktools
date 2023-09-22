@@ -1,13 +1,11 @@
 # This code is based on CoZ's mpkpack.py at https://github.com/CommitteeOfZero/sghd-patch/blob/master/mpkpack.py
 
 import csv
-import sys
 import os
 import os.path
 import io
 import argparse
-import tkinter
-from tkinter import filedialog
+from PyQt5.QtWidgets import QApplication, QFileDialog
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-G", type=bool, default=True, help="Enable GUI mode")
@@ -20,12 +18,11 @@ output_path = mpkfile[0:-4] if mpkfile else None
 enable_gui = args.G
 
 if enable_gui:
-    root = tkinter.Tk()
-    root.withdraw()
-    mpkfile = filedialog.askopenfilename(title="Select MPK file", filetypes=[("MPK file", "*.mpk")])
+    app = QApplication([])
+    mpkfile , check = QFileDialog.getOpenFileName(None, "Select MPK file", os.getenv("HOME"), 
+                                                  "MPK Files (*.mpk);;All Files (*)")
     tocfile = f"{mpkfile[0:-4]}_toc.csv"
     output_path = mpkfile[0:-4]
-    root.destroy()
 
 if mpkfile and tocfile:
     print("                       M P K  U N P A C K")

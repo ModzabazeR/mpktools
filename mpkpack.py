@@ -5,8 +5,7 @@ import os
 import struct
 import io
 import argparse
-import tkinter
-from tkinter import filedialog
+from PyQt5.QtWidgets import QApplication, QFileDialog
 
 def round_to_2kb(par):
     return int(((par / 2048) + (0 if (par % 2048) == 0 else 1)) * 2048)
@@ -21,11 +20,12 @@ output_path = f"{tocfile[0:-4]}.mpk" if tocfile else None
 enable_gui = args.G
 
 if enable_gui:
-    root = tkinter.Tk()
-    root.withdraw()
-    tocfile = filedialog.askopenfilename(title="Select TOC file", filetypes=[("TOC file", "*.csv")])
-    output_path = f"{tocfile[0:-4]}.mpk"
-    root.destroy()
+    app = QApplication([])
+    tocfile , check = QFileDialog.getOpenFileName(None, "Select TOC file", os.getenv("HOME"), 
+                                                  "TOC Files (*.csv);;All Files (*)")
+    # output_path = f"{tocfile[0:-4]}.mpk"
+    output_path = f"{tocfile.removesuffix('_toc.csv')}.mpk"
+
 
 if tocfile:
     print("                M P K P A C K")
